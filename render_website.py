@@ -25,7 +25,7 @@ def on_reload():
     books = get_books_description('description.json')
     books_chunks = make_books_chunks(books)
     for num, chunk in enumerate(books_chunks):
-        rendered_page = template.render(books=chunk)
+        rendered_page = template.render(books=chunk, num_pages=10)
         with open(f'pages/index{num+1}.html', 'w', encoding="utf8") as file:
             file.write(rendered_page)
 
