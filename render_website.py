@@ -37,5 +37,3 @@ if __name__ == "__main__":
     server.watch('template.html', on_reload)
     server.watch('render_website.py', on_reload)
     server.serve(root='.')
-    #server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
-    #server.serve_forever()
