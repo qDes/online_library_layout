@@ -1,8 +1,16 @@
+import glob
 import json
+import os
 
-from livereload import Server
-from http.server import HTTPServer, SimpleHTTPRequestHandler
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from livereload import Server
+from more_itertools import chunked
+
+
+def delete_old_files(directory):
+    files_to_delete = glob.glob(f"{directory}/*")
+    for file_ in files_to_delete:
+        os.remove(file_)
 
 
 def get_books_description(filename):
@@ -11,29 +19,26 @@ def get_books_description(filename):
     return description
 
 
-def make_books_chunks(books, chunk_size=25):
-    chunks = [books[x:x+chunk_size] for x in range(0, len(books), chunk_size)]
-    return chunks
-
-
-def on_reload():
+def rebuild_pages():
     env = Environment(
         loader=FileSystemLoader('.'),
         autoescape=select_autoescape(['html', 'xml'])
     )
     template = env.get_template('template.html')
     books = get_books_description('description.json')
-    books_chunks = make_books_chunks(books)
-    for num, chunk in enumerate(books_chunks):
+    books_chunks = list(chunked(books, 25))
+    delete_old_files(directory="pages")
+    for num, chunk in enumerate(books_chunks, 1):
         rendered_page = template.render(books=chunk,
                                         num_pages=len(books_chunks),
-                                        current_page=num+1)
-        with open(f'pages/index{num+1}.html', 'w', encoding="utf8") as file:
+                                        current_page=num)
+        with open(f'pages/index{num}.html', 'w', encoding="utf8") as file:
             file.write(rendered_page)
 
 
 if __name__ == "__main__":
+    rebuild_pages()
     server = Server()
-    server.watch('template.html', on_reload)
-    server.watch('render_website.py', on_reload)
+    server.watch('template.html', rebuild_pages)
+    server.watch('render_website.py', rebuild_pages)
     server.serve(root='.')
